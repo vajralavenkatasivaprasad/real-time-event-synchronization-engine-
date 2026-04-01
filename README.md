@@ -1,6 +1,6 @@
 # Real Time Event Synchronization Engine (RTESE)
 ## Milestone Project 1 — Full Stack Application Development (Java)
-### Student: K.Charan Sai | VTU25310 | Reg: 23UECS1094
+### Student: Vajrala Venkata Siva Prasad | VTU26004 | Reg: 23UECS0585
 ### Course: 10211CS224 | Faculty: Dr. Angeline Lydia
 
 ---
