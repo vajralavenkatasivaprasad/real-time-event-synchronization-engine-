@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RTESE — Real Time Event Synchronization Engine</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="13" stroke="#39d0d8" stroke-width="1.5"/>
+      <circle cx="14" cy="14" r="5" fill="#39d0d8"/>
+      <path d="M14 1v26M1 14h26" stroke="#39d0d8" stroke-width="1" stroke-dasharray="3 3" opacity=".35"/>
+      <circle cx="14" cy="1" r="2.2" fill="#58a6ff"/>
+      <circle cx="14" cy="27" r="2.2" fill="#58a6ff"/>
+      <circle cx="1" cy="14" r="2.2" fill="#58a6ff"/>
+      <circle cx="27" cy="14" r="2.2" fill="#58a6ff"/>
+    </svg>
+    <span>RTESE</span>
+    <span class="logo-sub">Real Time Event Synchronization Engine</span>
+  </div>
+  <div class="header-stats">
+    <div class="hstat"><span class="dot green pulse"></span>Engine <strong id="h-engine-state">Online</strong></div>
+    <div class="hstat">Events/s: <strong id="h-eps">—</strong></div>
+    <div class="hstat">Latency: <strong id="h-lat">—</strong></div>
+    <div class="hstat">Consumers: <strong id="h-cons">—</strong></div>
+    <div class="hstat">Uptime: <strong id="h-uptime">00:00:00</strong></div>
+    <div class="hstat sse-status" id="sse-badge"><span class="dot yellow"></span>Connecting…</div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-group-label">Engine</div>
+    <a class="nav-item active" data-panel="dashboard">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2V2zm0 7h5v5H2V9zm7-7h5v5H9V2zm0 7h5v5H9V9z"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" data-panel="publish">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8h9m-3-3l3 3-3 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="13" cy="8" r="2" fill="currentColor"/></svg>
+      Publish Event
+    </a>
+    <a class="nav-item" data-panel="consumers">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="4" r="2"/><circle cx="11" cy="4" r="2"/><path d="M1 11c0-2.2 1.8-4 4-4s4 1.8 4 4H1zm6 0c0-2.2 1.8-4 4-4s4 1.8 4 4h-8z"/></svg>
+      Consumers
+      <span class="nav-badge" id="nb-consumers">8</span>
+    </a>
+    <a class="nav-item" data-panel="eventlog">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 3v1h8V5H4zm0 3v1h8V8H4zm0 3v1h5v-1H4z"/></svg>
+      Event Log
+      <span class="nav-badge" id="nb-log">0</span>
+    </a>
+    <a class="nav-item" data-panel="replay">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3 8a5 5 0 009.9-1h-2a3 3 0 11-2.8-4H5v1.5l3-2.5-3-2.5V3H3a5 5 0 000 5z"/></svg>
+      Replay
+    </a>
+    <div class="nav-group-label">Monitor</div>
+    <a class="nav-item" data-panel="metrics">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1 12l4-5 3 3 3-4 4 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Metrics
+    </a>
+    <a class="nav-item" data-panel="architecture">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="4" height="4" rx="1"/><rect x="6" y="1" width="4" height="4" rx="1"/><rect x="11" y="1" width="4" height="4" rx="1"/><rect x="3" y="8" width="4" height="4" rx="1"/><rect x="9" y="8" width="4" height="4" rx="1"/><path d="M3 5v2h10V5M6 5v1M11 5v1M5 8h1M9 8h2" stroke="currentColor" fill="none" stroke-width="1"/></svg>
+      Architecture
+    </a>
+    <div class="sidebar-footer">
+      <div>v1.0.0 · Milestone Project 1</div>
+      <div>K.Charan Sai · 23UECS1094</div>
+      <div>10211CS224 · FSAD Java</div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <div class="topbar">
+      <div class="breadcrumb">RTESE / <span id="breadcrumb-label">Dashboard</span></div>
+      <div class="topbar-actions">
+        <button class="btn" id="engine-toggle-btn" onclick="toggleEngine()">⏸ Pause Engine</button>
+        <button class="btn primary" onclick="showPanel('publish')">+ Publish Event</button>
+      </div>
+    </div>
+
+    <!-- ── DASHBOARD ─────────────────────────────────────── -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Events / Second</div>
+          <div class="kpi-value cyan" id="kpi-eps">—</div>
+          <div class="kpi-sub" id="kpi-eps-delta">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Latency</div>
+          <div class="kpi-value blue" id="kpi-lat">— ms</div>
+          <div class="kpi-sub" id="kpi-lat-sub">p99: —</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active Consumers</div>
+          <div class="kpi-value green" id="kpi-cons">—</div>
+          <div class="kpi-sub" id="kpi-lag-sub">— lagging</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Events</div>
+          <div class="kpi-value purple" id="kpi-total">0</div>
+          <div class="kpi-sub">Error rate: <span id="kpi-err">0.00%</span></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Live Event Stream</div>
+              <div class="card-sub">Real-time event flow from engine</div>
+            </div>
+            <div class="mini-chart" id="mini-chart"></div>
+          </div>
+          <div class="stream-list" id="live-stream"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div class="card-title">Topic Distribution</div></div>
+          <div id="topic-bars"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Consumer Health Overview</div>
+          <span class="badge blue" id="cons-online-badge">— online</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Consumer ID</th><th>Service</th><th>Protocol</th><th>Topics</th>
+              <th>Status</th><th>Msg Lag</th><th>Delivered</th>
+            </tr></thead>
+            <tbody id="dash-cons-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PUBLISH ─────────────────────────────────────── -->
+    <div class="panel" id="panel-publish">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Publish New Event</div></div>
+          <div class="form-stack">
+            <div class="form-group">
+              <label>Event Topic</label>
+              <select id="pub-topic">
+                <option>order.created</option><option>order.updated</option>
+                <option>user.signup</option><option>payment.processed</option>
+                <option>inventory.update</option><option>notification.push</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Event Type</label>
+                <select id="pub-type"><option>CREATE</option><option>UPDATE</option><option>DELETE</option><option>NOTIFY</option></select>
+              </div>
+              <div class="form-group">
+                <label>Priority</label>
+                <select id="pub-priority"><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Producer ID</label>
+              <input type="text" id="pub-producer" value="svc-payment-001">
+            </div>
+            <div class="form-group">
+              <label>Payload (JSON)</label>
+              <textarea id="pub-payload" rows="6">{"orderId":"ORD-29311","amount":4299.00,"currency":"INR","customerId":"cust_882"}</textarea>
+            </div>
+            <div class="btn-row">
+              <button class="btn primary" onclick="publishEvent()">▶ Publish Event</button>
+              <button class="btn" onclick="autoFill()">Auto-fill Payload</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="card-head"><div class="card-title">API Response</div></div>
+            <pre class="code-block" id="pub-response"><span class="cm">// Response appears here after publishing…</span></pre>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Publish History</div></div>
+            <div id="pub-history" class="pub-history"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONSUMERS ─────────────────────────────────────── -->
+    <div class="panel" id="panel-consumers">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Active</div><div class="kpi-value green" id="c-active">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Lagging</div><div class="kpi-value orange" id="c-lagging">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Offline</div><div class="kpi-value red" id="c-offline">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Topics</div><div class="kpi-value blue">6</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Consumer Registry</div>
+          <div class="btn-row" style="gap:8px">
+            <select id="filter-proto" onchange="renderConsumers()" style="font-size:12px;padding:5px 8px">
+              <option value="">All Protocols</option>
+              <option>WebSocket</option><option>REST Poll</option><option>Webhook</option>
+            </select>
+            <button class="btn primary" onclick="addConsumerModal()">+ Register</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Consumer ID</th><th>Service</th><th>Subscribed Topics</th><th>Protocol</th>
+              <th>Status</th><th>Msg Lag</th><th>Delivered</th><th>Action</th>
+            </tr></thead>
+            <tbody id="cons-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EVENT LOG ─────────────────────────────────────── -->
+    <div class="panel" id="panel-eventlog">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Event Log <span class="badge gray" id="log-count-badge">0 events</span></div>
+          <div class="btn-row" style="gap:8px">
+            <input type="text" id="log-search" placeholder="Search events…" style="width:180px" oninput="renderLog()">
+            <select id="log-topic" onchange="renderLog()" style="font-size:12px;padding:5px 8px">
+              <option value="">All Topics</option>
+              <option>order.created</option><option>order.updated</option><option>user.signup</option>
+              <option>payment.processed</option><option>inventory.update</option><option>notification.push</option>
+            </select>
+            <select id="log-status" onchange="renderLog()" style="font-size:12px;padding:5px 8px">
+              <option value="">All Status</option><option>ACK</option><option>NACK</option>
+            </select>
+            <button class="btn" onclick="clearLog()">Clear</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Seq</th><th>Event ID</th><th>Topic</th><th>Producer</th>
+              <th>Timestamp</th><th>Priority</th><th>Status</th><th>Latency</th><th>Consumers</th>
+            </tr></thead>
+            <tbody id="log-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPLAY ─────────────────────────────────────── -->
+    <div class="panel" id="panel-replay">
+      <div class="two-col">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Replay Configuration</div></div>
+            <div class="form-stack">
+              <div class="form-group">
+                <label>Topic</label>
+                <select id="rp-topic">
+                  <option>order.created</option><option>user.signup</option>
+                  <option>payment.processed</option><option value="">All Topics</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>From Seq ID</label><input type="number" id="rp-from" value="98400"></div>
+                <div class="form-group"><label>To Seq ID</label><input type="number" id="rp-to" value="98500"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Target Consumer</label>
+                  <select id="rp-consumer">
+                    <option>svc-analytics</option><option>svc-dashboard</option><option>svc-reporting</option><option>All Consumers</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Speed</label>
+                  <select id="rp-speed"><option>1x</option><option>2x</option><option>5x</option><option>10x</option></select>
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn primary" id="rp-start" onclick="startReplay()">▶ Start Replay</button>
+                <button class="btn" id="rp-stop" disabled onclick="stopReplay()">⏹ Stop</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Replay Progress</div></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="progress-bar"><div class="progress-fill green" id="rp-progress" style="width:0%"></div></div>
+              <div class="rp-meta">
+                <span id="rp-done">0 / 0</span>
+                <span id="rp-status" style="color:var(--muted)">Idle</span>
+              </div>
+              <div class="kpi-grid" style="grid-template-columns:1fr 1fr 1fr">
+                <div class="kpi-card" style="padding:10px"><div class="kpi-label">Replayed</div><div class="kpi-value cyan" id="rp-count" style="font-size:20px">0</div></div>
+                <div class="kpi-card" style="padding:10px"><div class="kpi-label">Errors</div><div class="kpi-value red" id="rp-errors" style="font-size:20px">0</div></div>
+                <div class="kpi-card" style="padding:10px"><div class="kpi-label">Elapsed</div><div class="kpi-value" id="rp-elapsed" style="font-size:20px">0.0s</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Replay Log</div></div>
+          <div id="rp-log" class="stream-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── METRICS ─────────────────────────────────────── -->
+    <div class="panel" id="panel-metrics">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Peak Throughput</div><div class="kpi-value cyan" id="m-peak">0</div><div class="kpi-sub">events/sec</div></div>
+        <div class="kpi-card"><div class="kpi-label">Total Delivered</div><div class="kpi-value green" id="m-total">0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Failed / Retried</div><div class="kpi-value red" id="m-failed">0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Avg Throughput</div><div class="kpi-value purple" id="m-avg">0</div><div class="kpi-sub">events/sec</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Throughput (events/sec)</div></div>
+          <canvas id="eps-chart" height="160"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Latency (ms)</div></div>
+          <canvas id="lat-chart" height="160"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Topic Statistics</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Topic</th><th>Events Published</th><th>Active Consumers</th><th>Avg Latency</th><th>Errors</th><th>Error Rate</th></tr></thead>
+            <tbody id="topic-stats-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ARCHITECTURE ─────────────────────────────────── -->
+    <div class="panel" id="panel-architecture">
+      <div class="card">
+        <div class="card-head"><div class="card-title">System Architecture</div></div>
+        <div class="arch-diagram">
+          <div class="arch-layer">
+            <div class="arch-box blue">
+              <strong>Producers</strong>
+              <small>Web App · Mobile App · IoT Sensor · Microservices · 3rd Party REST API</small>
+            </div>
+          </div>
+          <div class="arch-arrow">↓  Event Payload (REST / WebSocket)  ↓</div>
+          <div class="arch-layer">
+            <div class="arch-box orange">
+              <strong>API Gateway</strong>
+              <small>JWT Authentication · Rate Limiting · Schema Validation · Load Balancer</small>
+            </div>
+          </div>
+          <div class="arch-arrow">↓  Validated &amp; Authenticated Event  ↓</div>
+          <div class="arch-layer multi">
+            <div class="arch-box red"><strong>Event Validator</strong><small>Schema · Dedup · Auth</small></div>
+            <div class="arch-box yellow"><strong>Sequencer</strong><small>Seq ID · Timestamp</small></div>
+            <div class="arch-box cyan"><strong>Topic Router</strong><small>Partition mapping</small></div>
+            <div class="arch-box green"><strong>Replay Manager</strong><small>Offset replay</small></div>
+          </div>
+          <div class="arch-arrow">↓  Routed to Topic Partition  ↓</div>
+          <div class="arch-layer">
+            <div class="arch-box purple">
+              <strong>Message Broker — Apache Kafka / RabbitMQ</strong>
+              <small>Topic Partitions · Consumer Groups · Fan-out · Dead Letter Queue</small>
+            </div>
+          </div>
+          <div class="arch-arrow">↓  Fan-out to Subscribed Consumers  ↓</div>
+          <div class="arch-layer multi">
+            <div class="arch-box cyan"><strong>WebSocket Clients</strong><small>Push delivery ≤ 2ms</small></div>
+            <div class="arch-box blue"><strong>REST Poll</strong><small>Long-poll consumers</small></div>
+            <div class="arch-box green"><strong>Webhooks</strong><small>HTTP callbacks</small></div>
+            <div class="arch-box orange"><strong>Notification Svc</strong><small>Push / SMS / Email</small></div>
+          </div>
+          <div class="arch-arrow">↓  Persistence &amp; Monitoring  ↓</div>
+          <div class="arch-layer multi">
+            <div class="arch-box blue"><strong>PostgreSQL Event Log</strong><small>Ordered log · Replay · Audit trail</small></div>
+            <div class="arch-box red"><strong>Redis Cache</strong><small>Session · TTL · Dedup cache</small></div>
+            <div class="arch-box green"><strong>Monitoring Dashboard</strong><small>Metrics · Alerts · Tracing</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Technology Stack</div></div>
+        <div class="tech-grid">
+          <div>
+            <div class="tech-section-label">Frontend</div>
+            <div class="tech-tags">
+              <span class="badge blue">React.js</span>
+              <span class="badge blue">WebSocket (STOMP)</span>
+              <span class="badge blue">TailwindCSS</span>
+              <span class="badge blue">Chart.js</span>
+            </div>
+          </div>
+          <div>
+            <div class="tech-section-label">Backend</div>
+            <div class="tech-tags">
+              <span class="badge purple">Spring Boot (Java 17)</span>
+              <span class="badge purple">SockJS / STOMP</span>
+              <span class="badge purple">Spring Security + JWT</span>
+              <span class="badge purple">Maven</span>
+            </div>
+          </div>
+          <div>
+            <div class="tech-section-label">Messaging &amp; Data</div>
+            <div class="tech-tags">
+              <span class="badge orange">Apache Kafka</span>
+              <span class="badge orange">RabbitMQ</span>
+              <span class="badge orange">PostgreSQL</span>
+              <span class="badge orange">Redis</span>
+            </div>
+          </div>
+          <div>
+            <div class="tech-section-label">DevOps / Infra</div>
+            <div class="tech-tags">
+              <span class="badge gray">Docker</span>
+              <span class="badge gray">Docker Compose</span>
+              <span class="badge gray">GitHub Actions</span>
+              <span class="badge gray">Postman</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD CONSUMER MODAL -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span>Register New Consumer</span>
+      <button class="btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-stack">
+      <div class="form-group"><label>Service Name</label><input type="text" id="m-service" value="svc-new-001"></div>
+      <div class="form-group"><label>Subscribed Topics</label><input type="text" id="m-topics" value="order.created"></div>
+      <div class="form-group">
+        <label>Protocol</label>
+        <select id="m-proto"><option>WebSocket</option><option>REST Poll</option><option>Webhook</option></select>
+      </div>
+      <button class="btn primary" onclick="submitConsumer()">Register Consumer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
