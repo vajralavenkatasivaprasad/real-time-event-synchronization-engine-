@@ -168,7 +168,7 @@ def _broadcast(event_type, data):
 def engine_loop():
     """Generate events every 250ms while engine is running."""
     while True:
-        time.sleep(0.25)
+        time.sleep(1)
         if not engine_state["running"]:
             continue
 
