@@ -9,13 +9,13 @@
 
 ### 1. Install dependency
 ```bash
-pip install flask
+py -m pip install flask
 ```
 
 ### 2. Run the server
 ```bash
 cd rtese
-python app.py
+py app.py
 ```
 
 Open your browser at: **http://localhost:5000**
